@@ -1,0 +1,13 @@
+Data_Value,Description
+-9999,Indicate N.A. value from the source data for the Unemployed column on the VUNERABLEPOPSANDENVHEALTH page
+-2222 or -2222.2 or -2,"nda, no data available, see Data Notes document for details"
+-1111.1 or -1111 or -1,"nrf, no report, see Data Notes document for details"
+1,Represent 'No' in the indicator columns
+2,Represent 'Yes' in the indicator columns
+3,Represent 'Favorable to peers'  in the indicator columns
+4,Represent 'Unfavorable to peers' in the indicator columns
+5,Represent ''Favorable to peers and favorable the U.S. Rate' in the indicator columns
+6,Represent 'Favorable to peers and unfavorable the U.S. Rate' in the indicator columns
+7,Represent 'Unfavorable to peers and favorable the U.S. Rate' in the indicator columns
+8,Represent 'Unfavorable to peers and unfavorable the U.S. Rate' in the indicator columns
+-9998.9,Indicate no objective for the Healthy People 2010 Target data
