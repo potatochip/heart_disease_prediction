@@ -72,6 +72,20 @@ function shuffle(array) {
     return array;
 }
 
+// test = d3.tsv("all_four_data.csv")
+//   .row(function(d) {
+//     return {
+//       d.feature: xs.indexOf(d.Feature),
+//       d.estimator: ys.indexOf(d.Estimator),
+//       d.score: +d.Accuracy,
+//       d.sample_shape: d.sample_size
+//     };
+//   })
+//   .get(function(error, rows) {
+//     console.log(rows);
+// });
+
+
 d3.tsv("cleveland_data.csv",
   function(d) {
     return {
