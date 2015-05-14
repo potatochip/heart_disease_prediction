@@ -35,29 +35,28 @@
 <div class='tboxx' id="tbox"></div>
 
 <script type="text/javascript">
-var margin = { top: 50, right: 0, bottom: 100, left: 100 },
-    width = 900 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom,
+var margin = { top: 30, right: 0, bottom: 0, left: 80 },
+    width = 700 - margin.left - margin.right,
+    height = 900 - margin.top - margin.bottom,
     gridSize = Math.floor(width / 13),
     legendElementWidth = gridSize*1.3,
     buckets = 70,
     // colors = colorbrewer.Reds[9]
     // colors = colorbrewer.Purples[9]
-    colors = colorbrewer.BuPu[9]
-    // colors = colorbrewer.YlGnBu[9]
+    // colors = colorbrewer.BuPu[9]
+    colors = colorbrewer.YlGnBu[9]
     // colors = colorbrewer.Reds[9]
     // colors = colorbrewer.OrRd[9]
     // colors = colorbrewer.Greens[9]
     // colors = colorbrewer.Blues[9]
     greycolors = colorbrewer.Greys[9]
-    estimators = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'decision tree', 'random forest'],
+    estimators = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'tree', 'forest'],
     features = ['age', 'sex', 'chest pain', 'resting bp', 'cholesterol',
             'blood sugar', 'ecg', 'max hr', 'angina',
             'depression', 'slope', 'vessels', 'thal'],
-    ys = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'decision_tree', 'random_forest'],
-    xs = ['age', 'sex', 'chest_pain', 'resting_bp', 'cholesterol',
-            'blood_sugar', 'ecg', 'max_hr', 'exercise_induced_angina',
-            'st_depression', 'slope', 'num_major_vessels', 'thal'];
+    xs = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'decision_tree', 'random_forest'],
+    ys = ['age', 'sex', 'chest_pain', 'resting_bp', 'cholesterol', 'blood_sugar', 'ecg', 'max_hr', 'exercise_induced_angina', 'st_depression', 'slope', 'num_major_vessels', 'thal'];
+    new_ys = ['Age', 'Angina', 'Bp', 'Cholesterol', 'Depression', 'Ecg', 'Hr', 'Pain', 'Sex', 'Slope', 'Sugar', 'Vessels', 'Thal'];
 
 // Randomly Shuffle Array
 function shuffle(array) {
@@ -75,10 +74,10 @@ function shuffle(array) {
 // test = d3.tsv("all_four_data.csv")
 //   .row(function(d) {
 //     return {
-//       d.feature: xs.indexOf(d.Feature),
-//       d.estimator: ys.indexOf(d.Estimator),
+//       d.feature: ys.indexOf(d.Feature),
+//       d.estimator: xs.indexOf(d.Estimator),
 //       d.score: +d.Accuracy,
-//       d.sample_shape: d.sample_size
+//       d.sample_shape: d.Sample
 //     };
 //   })
 //   .get(function(error, rows) {
@@ -89,9 +88,9 @@ function shuffle(array) {
 d3.tsv("cleveland_data.csv",
   function(d) {
     return {
-      estimator: ys.indexOf(d.Estimator),
-      feature: xs.indexOf(d.Feature),
-      value: +d.Accuracy * 100
+      estimator: xs.indexOf(d.Estimator),
+      feature: ys.indexOf(d.Feature),
+      value: +d.Accuracy * 100,
     };
   },
 
@@ -109,17 +108,17 @@ d3.tsv("cleveland_data.csv",
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var estimatorLabels = svg.selectAll(".estimatorLabel")
-        .data(estimators)
+    var featureLabels = svg.selectAll(".estimatorLabel")
+        .data(features)
         .enter().append("text")
           .text(function (d) { return d; })
           .attr("x", 0)
           .attr("y", function (d, i) { return i * gridSize; })
           .style("text-anchor", "end")
-          .attr("transform", "translate(-6," + gridSize / 1.5 + ")");
+          .attr("transform", "translate(-6," + gridSize / 1.75 + ")");
 
-    var featureLabels = svg.selectAll(".featureLabel")
-        .data(features)
+    var estimatorLabels = svg.selectAll(".featureLabel")
+        .data(estimators)
         .enter().append("text")
           .text(function(d) { return d; })
           .attr("x", function(d, i) { return i * gridSize; })
@@ -127,51 +126,57 @@ d3.tsv("cleveland_data.csv",
           .style("text-anchor", "middle")
           .attr("transform", "translate(" + gridSize / 2 + ", -6)");
 
-    heatMap = svg.selectAll(".box")
+     heatMap = svg.selectAll(".box")
         .data(data)
         .enter().append("rect")
-          .attr("x", function(d) { return (d.feature) * gridSize; })
-          // .attr("y", function(d) { return (d.estimator - 10) * gridSize; })
-          .attr("y", function(d) { return (d.estimator + 1) * gridSize * -1; })
-          // .attr("y", -100)
+          .attr("y", -100)
+          .attr("x", function(d) { return (d.estimator) * gridSize; })
           .attr("rx", 4)
           .attr("ry", 4)
-          .attr("class", function(d) { return "box bordered " + xs[d.feature]; } )
+          .attr("class", function(d) { return "box bordered " + ys[d.feature]; } )
           .attr("width", gridSize)
           .attr("height", gridSize)
           .style("fill", function(d) { return colorScale(d.value); });
-          // .style("fill", colors[0]);
 
-    var selection_rectangle = svg.selectAll(".selector")
-      .data(xs)
-      .enter().append("rect")
-        .attr("x", function(d, i) { return i * gridSize; })
-        .attr("y", -20)
-        .attr("rx", 4)
-        .attr("ry", 4)
-        .attr("width", gridSize)
-        .attr("height", 447)
-        .style("opacity", 0.5)
-        .style("stroke-opacity", 1.0)
-        .style("fill-opacity", 0.0)
-        .style("fill", 'purple')
-        .style("stroke", 'black')
-        .style("stroke-width", "2px")
-        .style("visibility", "hidden")
-        .attr("class", function(d) { return "selector " + d} );
+    heatMap.append("title")
+      .text(function(d) { return d.value.toFixed(2) + "%"; });
 
-    selection_rectangle.
-      on("click", selectRecalc);
+    var tooltip = svg.selectAll(".tip")
+      .data(data)
+      .enter().append("text")
+      .style("font-size","8px")
+      // .style("font-weight", "bold")
+      // .style("stroke", "grey")
+      .style("stroke-width", "0.1px")
+      .style("fill", "black")
+      .attr("y", function(d) { return (d.feature) * gridSize + 10; })
+      .attr("x", function(d) { return (d.estimator) * gridSize + 44; })
+      .attr("text-anchor", "end")
+      .attr("startOffset", "100%")
+      .text(function(d) { return d.value.toFixed(0) + "%"; })
+      .attr("vector-effect", "non-scaling-stroke")
+      .style("opacity", 0.0)
+      .style("visibility", "hidden");
 
+    tooltip
+      .transition()
+      .delay(3000)
+      .duration(2000)
+      .style("opacity", 1.0)
+      .style("visibility", "visible");
+
+// brians code
 // var paths = d3.selectAll("path");
 //   for(var key in shuffle(paths[0])) {
 //     d3.select(paths[0][key]).transition().duration(1000).delay(key/5).attr("transform", "translate(0)");
 //  }
-
-
+    // var paths = heatMap;
+    // for (var key in shuffle(paths[0])) {
+    //   d3.select(paths[0].transition().duration(1000).delay(key/5).attr("y", function(d) { return (d.feature) * gridSize; }));
+    // }
 
     heatMap.transition().duration(3000).ease("bounce")
-        .attr("y", function(d) { return (d.estimator) * gridSize; });
+        .attr("y", function(d) { return (d.feature) * gridSize; });
 
     heatMap
       .on("mouseover", function() { 
@@ -184,12 +189,14 @@ d3.tsv("cleveland_data.csv",
           //     prev_stencil
           //       .transition()
           //       .duration(200)
+          //       .style("opacity", 0.0)
           //       .style("visibility", "hidden")
           //       .style("stroke", "black");
           //     prev_stencil.classed("temp_on", false);
           //     stencil
           //       .transition()
           //       .duration(200)
+          //       .style("opacity", 1.0)
           //       .style("visibility", "visible")
           //       .style("stroke", 'purple');
           //     stencil.classed("temp_on", true);
@@ -203,11 +210,33 @@ d3.tsv("cleveland_data.csv",
       //   d3.select(selection)
       //     .transition()
       //     .duration(200)
+      //     .style("opacity", 0.0)
       //     .style("visibility", "hidden")
       //     .style("stroke", "black")
       //     .call(selectRecalc);
       // });
       .on("click", selectRecalc);
+
+    var selection_rectangle = svg.selectAll(".selector")
+      .data(ys)
+      .enter().append("rect")
+        .attr("y", function(d, i) { return i * gridSize; })
+        .attr("x", -79)
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .attr("height", gridSize)
+        .attr("width", gridSize*9)
+        .style("opacity", 0.0)
+        .style("stroke-opacity", 1.0)
+        .style("fill-opacity", 0.0)
+        .style("fill", 'purple')
+        .style("stroke", 'black')
+        .style("stroke-width", "2px")
+        .style("visibility", "hidden")
+        .attr("class", function(d) { return "selector " + d} );
+
+    selection_rectangle.
+      on("click", selectRecalc);
 
     function selectRecalc() {
       console.log(this);
@@ -215,6 +244,7 @@ d3.tsv("cleveland_data.csv",
         d3.select(this)
           .transition()
           .duration(500)
+          .style("opacity", 0.0)
           .style("visibility", "hidden");
         var currentRow = this.classList[1];
         d3.selectAll(".box.bordered." + currentRow)
@@ -223,7 +253,7 @@ d3.tsv("cleveland_data.csv",
           .classed("on", false);
         d3.selectAll(".box.bordered")
           .transition()
-          .duration(500)
+          .duration(1000)
           .style('fill', function(d) {
             if (this.classList.contains(currentRow)) {
               return greyScale(d.value);
@@ -236,13 +266,14 @@ d3.tsv("cleveland_data.csv",
         if ( resetGrid(selection_rectangle) ) {
             heatMap
               .transition()
-              .duration(500)
+              .duration(1000)
               .style("fill", function(d) { return colorScale(d.value); });
         };
       } else {
         d3.select(".selector." + this.classList[2])
           .transition()
           .duration(500)
+          .style("opacity", 1.0)
           .style("visibility", "visible");
         var currentRow = this.classList[2];
         d3.selectAll(".box.bordered." + currentRow)
@@ -251,7 +282,7 @@ d3.tsv("cleveland_data.csv",
           .classed("on", true);
         d3.selectAll('.box.bordered')
           .transition()
-          .duration(500)
+          .duration(1000)
           .style('fill', function(d) {
             if (this.classList.contains(currentRow)) {
               return colorScale(d.value);
@@ -262,14 +293,12 @@ d3.tsv("cleveland_data.csv",
             }
           });
       };
-      // recalc colors on each click
     };
 
     function resetGrid(stencil) {
       var count = 0;
       stencil
         .each( function(x) { 
-          test = d3.select(this);
           var status = d3.select(this).classed("on");
           if (status) {
             count += 1;
@@ -278,25 +307,22 @@ d3.tsv("cleveland_data.csv",
       return (count == 0);
     };
 
-    heatMap.append("title").text(function(d) { return d.value.toFixed(2) + "%"; });
-
     var legend = svg.selectAll(".legend")
         .data([0].concat(colorScale.quantiles()), function(d) { return d; })
         .enter().append("g")
           .attr("class", "legend");
 
     legend.append("rect")
-      .attr("x", function(d, i) { return legendElementWidth * i; })
-      .attr("y", height)
+      .attr("y", function(d, i) { return gridSize / 2 * i - 20; })
+      .attr("x", gridSize * 10)
       .attr("width", legendElementWidth)
       .attr("height", gridSize / 2)
       .style("fill", function(d, i) { return colors[i]; });
 
     legend.append("text")
-      .attr("class", "mono")
       .text(function(d) { return "≥ " + d.toFixed(1) + "%"; })
-      .attr("x", function(d, i) { return legendElementWidth * i; })
-      .attr("y", height + gridSize);
+      .attr("y", function(d, i) { return gridSize / 2 * i; })
+      .attr("x", gridSize * 9);
 
 //     var toolbox_svg = d3.select("#tbox").append("svg")
 //       .attr("width", 250 + margin.left + margin.right)
