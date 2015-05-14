@@ -41,7 +41,14 @@ var margin = { top: 50, right: 0, bottom: 100, left: 100 },
     gridSize = Math.floor(width / 13),
     legendElementWidth = gridSize*1.3,
     buckets = 70,
-    colors = colorbrewer.YlOrRd[9]
+    // colors = colorbrewer.Reds[9]
+    // colors = colorbrewer.Purples[9]
+    colors = colorbrewer.BuPu[9]
+    // colors = colorbrewer.YlGnBu[9]
+    // colors = colorbrewer.Reds[9]
+    // colors = colorbrewer.OrRd[9]
+    // colors = colorbrewer.Greens[9]
+    // colors = colorbrewer.Blues[9]
     greycolors = colorbrewer.Greys[9]
     estimators = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'decision tree', 'random forest'],
     features = ['age', 'sex', 'chest pain', 'resting bp', 'cholesterol',
@@ -51,6 +58,19 @@ var margin = { top: 50, right: 0, bottom: 100, left: 100 },
     xs = ['age', 'sex', 'chest_pain', 'resting_bp', 'cholesterol',
             'blood_sugar', 'ecg', 'max_hr', 'exercise_induced_angina',
             'st_depression', 'slope', 'num_major_vessels', 'thal'];
+
+// Randomly Shuffle Array
+function shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex ;
+    while (0 !== currentIndex) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+    return array;
+}
 
 d3.tsv("cleveland_data.csv",
   function(d) {
@@ -93,15 +113,16 @@ d3.tsv("cleveland_data.csv",
           .style("text-anchor", "middle")
           .attr("transform", "translate(" + gridSize / 2 + ", -6)");
 
-    var heatMap = svg.selectAll(".box")
+    heatMap = svg.selectAll(".box")
         .data(data)
         .enter().append("rect")
           .attr("x", function(d) { return (d.feature) * gridSize; })
+          // .attr("y", function(d) { return (d.estimator - 10) * gridSize; })
           .attr("y", function(d) { return (d.estimator + 1) * gridSize * -1; })
           // .attr("y", -100)
           .attr("rx", 4)
           .attr("ry", 4)
-          .attr("class", function(d) { return "box bordered " + xs[d.feature]} )
+          .attr("class", function(d) { return "box bordered " + xs[d.feature]; } )
           .attr("width", gridSize)
           .attr("height", gridSize)
           .style("fill", function(d) { return colorScale(d.value); });
@@ -116,61 +137,134 @@ d3.tsv("cleveland_data.csv",
         .attr("ry", 4)
         .attr("width", gridSize)
         .attr("height", 447)
-        .attr("opacity", 1.0)
-        .attr("stroke-opacity", 0.6)
-        .attr("fill-opacity", 0.0)
-        .attr("fill", 'purple')
-        .attr("stroke", '#000000')
-        .attr("stroke-width", "2px")
+        .style("opacity", 0.5)
+        .style("stroke-opacity", 1.0)
+        .style("fill-opacity", 0.0)
+        .style("fill", 'purple')
+        .style("stroke", 'black')
+        .style("stroke-width", "2px")
         .style("visibility", "hidden")
         .attr("class", function(d) { return "selector " + d} );
 
     selection_rectangle.
       on("click", selectRecalc);
 
-    heatMap.transition().duration(30)
-        // .style("fill", function(d) { return colorScale(d.value); })
+// var paths = d3.selectAll("path");
+//   for(var key in shuffle(paths[0])) {
+//     d3.select(paths[0][key]).transition().duration(1000).delay(key/5).attr("transform", "translate(0)");
+//  }
+
+
+
+    heatMap.transition().duration(3000).ease("bounce")
         .attr("y", function(d) { return (d.estimator) * gridSize; });
 
     heatMap
-      .on("mouseover", function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          // .attr("width", 10)
-          .style("fill", 'purple')
+      .on("mouseover", function() { 
+          // var stencil = d3.select(".selector." + this.classList[2]);
+          // if (typeof prev_stencil == "undefined") {
+          //   prev_stencil = stencil
+          // };
+          // if ( !(stencil.classed("on")) ){
+          //   if (stencil != prev_stencil) {
+          //     prev_stencil
+          //       .transition()
+          //       .duration(200)
+          //       .style("visibility", "hidden")
+          //       .style("stroke", "black");
+          //     prev_stencil.classed("temp_on", false);
+          //     stencil
+          //       .transition()
+          //       .duration(200)
+          //       .style("visibility", "visible")
+          //       .style("stroke", 'purple');
+          //     stencil.classed("temp_on", true);
+          //   }
+          // }
+          // prev_stencil = stencil;
       })
-      .on("mouseout", function() {
-        d3.select(this)
-          .transition()
-          .duration(600)
-          // .attr("width", gridSize)
-          .style("fill", function(d) { return colorScale(d.value); })
-      })
+      // .on("click", function() {
+      //   var selection = ".selector." + this.classList[2];
+      //   d3.select(selection).classed("temp_on", false)
+      //   d3.select(selection)
+      //     .transition()
+      //     .duration(200)
+      //     .style("visibility", "hidden")
+      //     .style("stroke", "black")
+      //     .call(selectRecalc);
+      // });
       .on("click", selectRecalc);
 
     function selectRecalc() {
-      if (this.classList.contains("selector")) {
+      console.log(this);
+      if (d3.select(this).classed("selector")) {
         d3.select(this)
+          .transition()
+          .duration(500)
           .style("visibility", "hidden");
-        d3.selectAll(".box.bordered" + this.classList[1])
-          .style("fill", function(d) { return colorScale(d.value); });
+        var currentRow = this.classList[1];
+        d3.selectAll(".box.bordered." + currentRow)
+          .classed("selected", false);
+        d3.selectAll(".selector." + currentRow)
+          .classed("on", false);
+        d3.selectAll(".box.bordered")
+          .transition()
+          .duration(500)
+          .style('fill', function(d) {
+            if (this.classList.contains(currentRow)) {
+              return greyScale(d.value);
+            } else if (this.classList.contains("selected")) {
+              return colorScale(d.value);
+            } else {
+              return greyScale(d.value);
+            }
+          });
+        if ( resetGrid(selection_rectangle) ) {
+            heatMap
+              .transition()
+              .duration(500)
+              .style("fill", function(d) { return colorScale(d.value); });
+        };
       } else {
         d3.select(".selector." + this.classList[2])
+          .transition()
+          .duration(500)
           .style("visibility", "visible");
-        d3.selectAll(".box.bordered")
-          .style("fill", function(d) { return greyScale(d.value); });
+        var currentRow = this.classList[2];
+        d3.selectAll(".box.bordered." + currentRow)
+          .classed("selected", true);
+        d3.selectAll(".selector." + currentRow)
+          .classed("on", true);
+        d3.selectAll('.box.bordered')
+          .transition()
+          .duration(500)
+          .style('fill', function(d) {
+            if (this.classList.contains(currentRow)) {
+              return colorScale(d.value);
+            } else if (this.classList.contains("selected")) {
+              return colorScale(d.value);
+            } else {
+              return greyScale(d.value);
+            }
+          });
       };
-      // keep track of whether turned on
       // recalc colors on each click
-      // greyshade non clicked colors on
-      console.log(this.getAttribute("class"));
-      console.log(this.classList[1]);
-      console.log(this);
-      console.log(this.classList.contains("selector"))
     };
 
-    heatMap.append("title").text(function(d) { return d.value; });
+    function resetGrid(stencil) {
+      var count = 0;
+      stencil
+        .each( function(x) { 
+          test = d3.select(this);
+          var status = d3.select(this).classed("on");
+          if (status) {
+            count += 1;
+          }
+        })
+      return (count == 0);
+    };
+
+    heatMap.append("title").text(function(d) { return d.value.toFixed(2) + "%"; });
 
     var legend = svg.selectAll(".legend")
         .data([0].concat(colorScale.quantiles()), function(d) { return d; })
