@@ -122,13 +122,13 @@ d3.tsv("all_four_data.tsv")
     // to access values, fake_dict.get("Age_gaussian").score or fake_dict.get("AgePain_linear").sample_size
 });
 
-
-d3.tsv("cleveland_data.csv",
+d3.tsv("start_data.tsv",
   function(d) {
     return {
       estimator: estimators.indexOf(d.Estimator),
       feature: features.indexOf(d.Feature),
-      value: +d.Accuracy * 100
+      value: +d.Accuracy * 100,
+      sample_size: +d.Sample
     };
   },
 
@@ -188,6 +188,7 @@ d3.tsv("cleveland_data.csv",
       // .style("font-weight", "bold")
       // .style("stroke", "grey")
       // .attr("vector-effect", "non-scaling-stroke")
+      .style("font-style", "italic")
       .style("stroke-width", "0.1px")
       .style("fill", "black")
       .attr("y", function(d) { return (d.feature) * gridSize + 10; })
@@ -202,7 +203,7 @@ d3.tsv("cleveland_data.csv",
     tooltip
       .transition()
       .delay(3000)
-      .duration(2000)
+      .duration(1000)
       .style("opacity", 1.0)
       .style("visibility", "visible");
 
@@ -293,32 +294,67 @@ d3.tsv("cleveland_data.csv",
           .classed("selected", false);
         d3.selectAll(".selector." + currentRow)
           .classed("on", false);
-        d3.selectAll(".box.bordered")
-          .data(data)
-          .transition()
-          .duration(1000)
-          .style('fill', function(d) {
-            if (this.classList.contains(currentRow)) {
-              return greyScale(d.value);
-            } else if (this.classList.contains("selected")) {
-              return colorScale(d.value);
-            } else {
-              return greyScale(d.value);
-            }
-          });
+        // d3.selectAll(".box.bordered")
+        //   .data(data)
+        //   .transition()
+        //   .duration(1000)
+        //   .style('fill', function(d) {
+        //     if (this.classList.contains(currentRow)) {
+        //       return greyScale(d.value);
+        //     } else if (this.classList.contains("selected")) {
+        //       return colorScale(d.value);
+        //     } else {
+        //       return greyScale(d.value);
+        //     };
+        //   });
         if ( resetGrid(selection_rectangle) ) {
+          updateToolbox(true);
+          recalcColors(currentRow, true);
+          recalcTips(currentRow, true);
           heatMap
+            .data(data)
             .transition()
             .duration(1000)
             .style("fill", function(d) { return colorScale(d.value); });
-          updateToolbox(true);
-          recalcTips(true);
+          tooltip
+            .data(data)
+            .transition()
+            .duration(1000)
+            .text(function(d) { return d.value.toFixed(0) + "%"; });
+          // d3.selectAll(".box.bordered")
+          //   .data(data)
+          //   .transition()
+          //   .duration(1000)
+          //   .style('fill', function(d) {
+          //     if (this.classList.contains(currentRow)) {
+          //       return greyScale(d.value);
+          //     } else if (this.classList.contains("selected")) {
+          //       return colorScale(d.value);
+          //     } else {
+          //       return greyScale(d.value);
+          //     };
+          //   });
         } else {
+          var currentRow = this.classList[1];
           updateToolbox(false);
-          recalcTips(false);
+          recalcColors(currentRow, false);
+          recalcTips(currentRow, false);
         };
       } else {
         // when clicking on a part of the grid with no selection box
+        if (resetGrid(selection_rectangle) ){
+          d3.selectAll('.box.bordered')
+            .data(data)
+            .transition()
+            .duration(1000)
+            .style('fill', function(d) {
+              if (this.classList.contains(currentRow)) {
+                return colorScale(d.value);
+              } else {
+                return greyScale(d.value);
+              }
+            });
+        };
         d3.select(".selector." + this.classList[2])
           .transition()
           .duration(500)
@@ -329,20 +365,23 @@ d3.tsv("cleveland_data.csv",
           .classed("selected", true);
         d3.selectAll(".selector." + currentRow)
           .classed("on", true);
-        d3.selectAll('.box.bordered')
-          .transition()
-          .duration(1000)
-          .style('fill', function(d) {
-            if (this.classList.contains(currentRow)) {
-              return colorScale(d.value);
-            } else if (this.classList.contains("selected")) {
-              return colorScale(d.value);
-            } else {
-              return greyScale(d.value);
-            }
-          });
+        // d3.selectAll('.box.bordered')
+        //   .data(data)
+        //   .transition()
+        //   .duration(1000)
+        //   .style('fill', function(d) {
+        //     if (this.classList.contains(currentRow)) {
+        //       return colorScale(d.value);
+        //     } else if (this.classList.contains("selected")) {
+        //       return colorScale(d.value);
+        //     } else {
+        //       return greyScale(d.value);
+        //     }
+        //   });
+
         updateToolbox(false);
-        recalcTips(false);
+        recalcColors(false, false);
+        recalcTips(false, false);
       };
     };
 
@@ -381,7 +420,6 @@ d3.tsv("cleveland_data.csv",
           class_list.push(c);
         }
       };
-      console.log(class_list)
       var features = class_list.sort();
       var key = features.join("") + "_";
       var score_list = [];
@@ -390,7 +428,7 @@ d3.tsv("cleveland_data.csv",
         score_list.push(+temp_score);
       };
       // var score = fake_dict.get(key + "gaussian").score;
-      var score = 1
+      var score = 1;
       var samples = fake_dict.get(key + "gaussian").sample_size;
       // console.log('features are ',features);
       // console.log('key is ',key);
@@ -400,32 +438,75 @@ d3.tsv("cleveland_data.csv",
       return [features, samples, score, score_list];
     };
 
-    function recalcColors(current) {
-      var values = selectedFromDict();
-      // console.log('current is ', current)
-      d3.selectAll(".box.bordered." + current)
-        .data(values[3][0])
-        .call(function(d){return colorScale(d)})
-        .style('fill', function(d){
-          return colorScale(d);
-        });
-    };
-// pass variable last_click all the way through to there. unclick doesnt remove 
-    function recalcTips(reset) {
+
+    function getSelected() {
+      var classes = d3.selectAll(".selected")[0];
+      var class_list = [];
+      for (var i = 0; i < classes.length; i++) {
+        var c = classes[i].classList[2];
+        if (class_list.indexOf(c) == -1) {
+          class_list.push(c);
+        }
+      };
+      return class_list;
+    }
+
+    function recalcColors(lastClick, reset) {
+      // var values = 0;
+      // if (lastClick == false) {
+      //   values = selectedFromDict();
+      // } else {
+      //   var class_list = getSelected();
+      //   class_list.push(lastClick);
+      //   values = rawFromDict([class_list])
+      //   values = rawFromDict([lastClick])
+      // };
+      var values = 0;
       if (reset == true) {
-        var values = rawFromDict(features);
+        values = rawFromDict([lastClick]);
       } else {      
-        var values = selectedFromDict();
+        values = selectedFromDict();
       };
       var features = values[0];
       var score_list = values[3];
-      var score_list_repeated = repeatArray(score_list, Math.pow(score_list.length, 2));
+      var score_list_repeated = repeatArray(score_list, score_list.length * features.length);
+      d3.selectAll("." + features.join(", .")).filter(".box.bordered")
+        .data(score_list_repeated)
+        .transition()
+        .duration(500)
+        .style('fill', function(d){ return colorScale(d);});
+      d3.selectAll("." + lastClick)
+        .data(score_list)
+        .transition()
+        .duration(500)
+        .style('fill', function(d){ return greyScale(d);});
+    };
+
+    function recalcTips(lastClick, reset) {
+      var values = 0;
+      if (reset == true) {
+        values = rawFromDict([lastClick]);
+      } else {      
+        values = selectedFromDict();
+      };
+      var features = values[0];
+      var score_list = values[3];
+      var score_list_repeated = repeatArray(score_list, score_list.length * features.length);
       d3.selectAll("." + features.join(", .")).filter(".tooltip")
         .data(score_list_repeated)
         .transition()
-        .delay(100)
-        .text(function(d){return d.toFixed(0) + "%"});
-    }
+        .duration(500)
+        .text(function(d){return d.toFixed(0) + "%";});
+      if (lastClick != false){
+        var new_values = rawFromDict([lastClick]);
+        var new_scores = new_values[3];
+        d3.selectAll(".tooltip." + lastClick)
+          .data(new_scores)
+          .transition()
+          .duration(500)
+          .text(function(d){ return d.toFixed(0) + "%";});
+      }
+    };
 
     function updateToolbox(reset) {
       if (reset == true) {
