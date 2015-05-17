@@ -17,12 +17,21 @@
     left: 0px;
   }
 
+  .tbox {
+    position: fixed;
+    top: 0px;
+    left: 900px;
+    background-color: gray;
+    width: 300px;
+    height: 500px;
+  }
+
   </style>
   <script src="d3.v3.js"></script>
   <script src="colorbrewer.v1.min.js"></script>
-<!--   <script src="http://d3js.org/d3.v3.js"></script>
+  <script src="http://d3js.org/d3.v3.js"></script>
   <script src="http://d3js.org/colorbrewer.v1.min.js"></script>
- --></head>
+</head>
 <body>
 <div class='chart' id="chart"></div>
 
@@ -32,18 +41,19 @@ var margin = { top: 30, right: 0, bottom: 0, left: 80 },
     height = 900 - margin.top - margin.bottom,
     gridSize = Math.floor(width / 13),
     legendElementWidth = gridSize*1.3,
-    buckets = 72,
-    // colors = colorbrewer.Reds[9],
-    // colors = colorbrewer.Purples[9],
-    // colors = colorbrewer.BuPu[9],
-    colors = colorbrewer.YlGnBu[9],
-    // colors = colorbrewer.OrRd[9],
-    // colors = colorbrewer.Greens[9],
-    // colors = colorbrewer.Blues[9],
-    greycolors = colorbrewer.Greys[9],
-    estimators = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'tree', 'forest'],
-    features = ['Age', 'Angina', 'Bp', 'Cholesterol', 'Depression', 'Ecg', 'Hr', 'Pain', 'Sex', 'Slope', 'Sugar', 'Vessels', 'Thal'],
-    tool_labels = ['Features', 'Sample Size', 'Accuracy'];
+    buckets = 72;
+    // colors = colorbrewer.Reds[9];
+    // colors = colorbrewer.Purples[9];
+    // colors = colorbrewer.BuPu[9];
+    colors = colorbrewer.YlGnBu[9];
+    // colors = colorbrewer.OrRd[9];
+    // colors = colorbrewer.Greens[9];
+    // colors = colorbrewer.Blues[9];
+    greycolors = colorbrewer.Greys[9];
+    estimators = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'tree', 'forest'];
+    xs = ['linear', 'knn', 'logistic', 'gaussian', 'svc', 'decision_tree', 'random_forest'];
+    features = ['Age', 'Angina', 'Bp', 'Cholesterol', 'Depression', 'Ecg', 'Hr', 'Pain', 'Sex', 'Slope', 'Sugar', 'Vessels', 'Thal'];
+    tool_labels = ['Features', 'Sample Size', 'Accuracy']
 
 // Randomly Shuffle Array
 function shuffle(array) {
@@ -61,21 +71,17 @@ function shuffle(array) {
 // Wrap words. Takes string, column width, characters to be inserted at every break,
 // and the cut (boolean).
 function wordwrap( str, width, brk, cut ) {
+ 
     brk = brk || 'n';
     width = width || 75;
     cut = cut || false;
+ 
     if (!str) { return str; }
+ 
     var regex = '.{1,' +width+ '}(\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\S+?(\s|$)');
+ 
     return str.match( RegExp(regex, 'g') ).join( brk );
-}
-
-function repeatArray(arr, count) {
-  var ln = arr.length;
-  var b = new Array();
-  for(i=0; i<count; i++) {
-    b.push(arr[i%ln]);
-  }
-  return b;    
+ 
 }
 // d3.tsv.parse("all_four_data.tsv",
 //   function(d) {
@@ -106,7 +112,7 @@ function repeatArray(arr, count) {
 // d3.csv("all_four_data.csv", function(data) {
 //   console.log(data[0].x);
 // });
-var fake_dict
+
 d3.tsv("all_four_data.tsv")
   .row(function(d) {
     return {
@@ -117,7 +123,7 @@ d3.tsv("all_four_data.tsv")
     };
   })
   .get(function(error, rows) {
-    var contents = rows;
+    contents = rows;
     fake_dict = d3.map(contents, function(d){return d.feature + "_" + d.estimator});
     // to access values, fake_dict.get("Age_gaussian").score or fake_dict.get("AgePain_linear").sample_size
 });
@@ -126,7 +132,7 @@ d3.tsv("all_four_data.tsv")
 d3.tsv("cleveland_data.csv",
   function(d) {
     return {
-      estimator: estimators.indexOf(d.Estimator),
+      estimator: xs.indexOf(d.Estimator),
       feature: features.indexOf(d.Feature),
       value: +d.Accuracy * 100
     };
@@ -192,7 +198,7 @@ d3.tsv("cleveland_data.csv",
       .style("fill", "black")
       .attr("y", function(d) { return (d.feature) * gridSize + 10; })
       .attr("x", function(d) { return (d.estimator) * gridSize + 44; })
-      .attr("class", function(d) { return "tooltip " + features[d.feature]})
+      .attr("class", function(d) { return "tooltip" + features[d.feature]})
       .attr("text-anchor", "end")
       .attr("startOffset", "100%")
       .text(function(d) { return d.value.toFixed(0) + "%"; })
@@ -311,11 +317,9 @@ d3.tsv("cleveland_data.csv",
             .transition()
             .duration(1000)
             .style("fill", function(d) { return colorScale(d.value); });
-          updateToolbox(true);
-          recalcTips(true);
+          updateToolbox(true, selected_values);
         } else {
-          updateToolbox(false);
-          recalcTips(false);
+          updateToolbox(false, selected_values);
         };
       } else {
         // when clicking on a part of the grid with no selection box
@@ -327,6 +331,8 @@ d3.tsv("cleveland_data.csv",
         var currentRow = this.classList[2];
         d3.selectAll(".box.bordered." + currentRow)
           .classed("selected", true);
+        recalcColors(currentRow, selected_values);
+        recalcTips(currentRow, selected_values);
         d3.selectAll(".selector." + currentRow)
           .classed("on", true);
         d3.selectAll('.box.bordered')
@@ -341,8 +347,7 @@ d3.tsv("cleveland_data.csv",
               return greyScale(d.value);
             }
           });
-        updateToolbox(false);
-        recalcTips(false);
+        updateToolbox(false, selected_values);
       };
     };
 
@@ -358,20 +363,6 @@ d3.tsv("cleveland_data.csv",
       return (count == 0)
     };
 
-    function rawFromDict(class_list) {
-      // class_list should be in format of ["Cholesterol", "Ecg", "Depression"]
-      var features = class_list.sort();
-      var key = features.join("") + "_";
-      var score_list = [];
-      for (var i = 0; i < estimators.length; i++) {
-        var temp_score = fake_dict.get(key + estimators[i]).score;
-        score_list.push(+temp_score);
-      };
-      var score = 1
-      var samples = fake_dict.get(key + "gaussian").sample_size;
-      return [features, samples, score, score_list];
-    };
-
     function selectedFromDict() {
       var classes = d3.selectAll(".selected")[0];
       var class_list = [];
@@ -381,57 +372,47 @@ d3.tsv("cleveland_data.csv",
           class_list.push(c);
         }
       };
-      console.log(class_list)
       var features = class_list.sort();
       var key = features.join("") + "_";
-      var score_list = [];
-      for (var i = 0; i < estimators.length; i++) {
-        var temp_score = fake_dict.get(key + estimators[i]).score;
-        score_list.push(+temp_score);
+      var score_list = [] ;
+      for (var i = 0; i < xs.length; i++) {
+        var value = fake_dict.get(key + xs[i]).score;
+        score_list.push(+value);
       };
-      // var score = fake_dict.get(key + "gaussian").score;
-      var score = 1
+      var score = fake_dict.get(key + "gaussian").score;
       var samples = fake_dict.get(key + "gaussian").sample_size;
-      // console.log('features are ',features);
-      // console.log('key is ',key);
-      // console.log('score is',score);
-      // console.log('samples are',samples);
-      // console.log('score list is',score_list);
+      console.log('features are ',features);
+      console.log('key is ',key);
+      console.log('score is',score);
+      console.log('samples are',samples);
+      console.log('score list is',score_list);
       return [features, samples, score, score_list];
     };
 
-    function recalcColors(current) {
-      var values = selectedFromDict();
-      // console.log('current is ', current)
+    function recalcColors(current, selected_values) {
+      var values = selected_values;
+      console.log('current is ', current)
       d3.selectAll(".box.bordered." + current)
         .data(values[3][0])
-        .call(function(d){return colorScale(d)})
+        .call(function(d){console.log("recolor ", d)})
         .style('fill', function(d){
           return colorScale(d);
         });
     };
-// pass variable last_click all the way through to there. unclick doesnt remove 
-    function recalcTips(reset) {
+
+    function recalcTips(current, reset, selected_values) {
       if (reset == true) {
-        var values = rawFromDict(features);
+        var values = []
       } else {      
-        var values = selectedFromDict();
+        var values = selected_values;
       };
-      var features = values[0];
-      var score_list = values[3];
-      var score_list_repeated = repeatArray(score_list, Math.pow(score_list.length, 2));
-      d3.selectAll("." + features.join(", .")).filter(".tooltip")
-        .data(score_list_repeated)
-        .transition()
-        .delay(100)
-        .text(function(d){return d.toFixed(0) + "%"});
     }
 
-    function updateToolbox(reset) {
+    function updateToolbox(reset, selected_values) {
       if (reset == true) {
-        var values = [['Nothing selected'], 0, 0, [0]]
+        var values = [['Nothing selected',''], 0, 0, [0,0]]
       } else {      
-        var values = selectedFromDict()
+        var values = selected_values;
       };
       var bottom_features = values[0];
       var samples = values[1];
@@ -448,7 +429,7 @@ d3.tsv("cleveland_data.csv",
         .transition()
         .duration(500)
         .text(function(d){return d});
-      toolSamples
+      toolAccuracy
         .data([samples])
         .transition()
         .duration(500)
@@ -458,6 +439,7 @@ d3.tsv("cleveland_data.csv",
         .transition()
         .duration(500)
         .text(function(d){return d});
+        // .text(function(d, i){ return (i == 2 ? d.toFixed(4) + "%" : d);} )
       // toolAccuracy
       //   .data(score_list)
       //   .transition()
@@ -542,7 +524,7 @@ d3.tsv("cleveland_data.csv",
         .style("fill", colors[8]);
 
     var toolFeatures = svg.selectAll(".toolfeatures")
-      .data(['Nothing selected',''])
+      .data(['Nothing selected', ''])
       .enter().append("text")
         .text(function(d){ return d;})
         .attr("x", gridSize * 8 + 80)
@@ -565,8 +547,8 @@ d3.tsv("cleveland_data.csv",
       .data([0])
       .enter().append("text")
         .text(function(d){ return d.toFixed(1) + "%";})
-        .attr("x", gridSize * 8 + 10)
-        .attr("y", 370)
+        .attr("x", gridSize * 8 + 80)
+        .attr("y", function(d, i) { return i * 20 + 350})
         .style("font-size","14px")
         .style("fill", colors[8])
         .style("opactiy", 0.0);
