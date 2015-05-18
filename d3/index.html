@@ -10,25 +10,18 @@
     stroke: #E6E6E6;
     stroke-width:2px;   
   }
-  .chart {
-    position: fixed;
-    top: 0px;
-    left: 0px;
-  }
 
   </style>
-  <script src="d3.v3.js"></script>
-  <script src="colorbrewer.v1.min.js"></script>
-<!--   <script src="http://d3js.org/d3.v3.js"></script>
+  <script src="http://d3js.org/d3.v3.js"></script>
   <script src="http://d3js.org/colorbrewer.v1.min.js"></script>
- --></head>
+</head>
 <body>
 <div class='chart' id="chart"></div>
 
 <script type="text/javascript">
 var margin = { top: 30, right: 0, bottom: 0, left: 80 },
     width = 700 - margin.left - margin.right,
-    height = 900 - margin.top - margin.bottom,
+    height = 2000 - margin.top - margin.bottom,
     gridSize = Math.floor(width / 13),
     legendElementWidth = gridSize*1.3,
     buckets = 86,
@@ -198,8 +191,8 @@ d3.tsv("start_data.tsv",
         .style("stroke-opacity", 0.5)
         .style("fill-opacity", 0.0)
         .style("fill", 'purple')
-        .style("stroke-dasharray", ("3, 3"))
-        .style("stroke", colors[8])
+        .style("stroke-dasharray", ("1, 1"))
+        .style("stroke", greycolors[8])
         .style("stroke-width", "2px")
         .style("visibility", "hidden")
         .attr("class", function(d) { return "selector " + d} );
@@ -454,14 +447,14 @@ d3.tsv("start_data.tsv",
       .attr("y", 100)
       .style("font-size","14px")
       .style("font-style", "italic")
-      .style("font-color", colors[8])
-      .classed("explain", true)
+      .style("color", colors[8])
       .attr({
-        height:250,
+        height:120,
         width: 320,
         transform: 'translate(0,0)'
       })
-      .html("<div class explain><p>\"I am not the Dread Pirate Roberts\", he said. \"My name is Ryan. I inherited the ship from the previous dread pirate Roberts, just as you will inherit it from me. The man I inherited it from was not the real dread pirate Roberts either. His name was Cummerbund. The real Roberts has been retired fifteen years and living like a king in Patagonia.\"</p></div>");
+      .append("xhtml:p")
+      .html("<div><p>\"I am not the Dread Pirate Roberts\", he said. \"My name is Ryan. I inherited the ship from the previous dread pirate Roberts, just as you will inherit it from me. The man I inherited it from was not the real dread pirate Roberts either. His name was Cummerbund. The real Roberts has been retired fifteen years and living like a king in Patagonia.\"</p></div>");
 
     var tools = svg.selectAll(".tools")
       .data(tool_labels)
