@@ -34,8 +34,8 @@ var margin = { top: 30, right: 0, bottom: 0, left: 80 },
     buckets = 86,
     // colors = colorbrewer.Reds[9],
     // colors = colorbrewer.Purples[9],
-    // colors = colorbrewer.BuPu[9],
-    colors = colorbrewer.YlGnBu[9],
+    colors = colorbrewer.BuPu[9],
+    // colors = colorbrewer.YlGnBu[9],
     // colors = colorbrewer.OrRd[9],
     // colors = colorbrewer.Greens[9],
     // colors = colorbrewer.Blues[9],
@@ -169,7 +169,7 @@ d3.tsv("start_data.tsv",
       .style("opacity", 1.0)
       .style("visibility", "visible");
 
-    heatMap.transition().duration(30).ease("bounce")
+    heatMap.transition().duration(3000).ease("bounce")
         .attr("y", function(d) { return (d.feature) * gridSize; });
 
     heatMap
@@ -492,7 +492,6 @@ d3.tsv("start_data.tsv",
         .style("font-size","14px")
         .style("fill", colors[8])
         .style("opactiy", 0.0);
-
   }
 );
 
