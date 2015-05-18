@@ -442,11 +442,11 @@ d3.tsv("start_data.tsv",
         .attr("ry", 5)
         .attr("width", 340)
         .attr("height", 220)
-        .style("stroke", colors[2])
+        .style("stroke", colors[1])
         .style("stroke-width", "1px")
-        .style("fill", colors[2]);
+        .style("fill", colors[0]);
 
-    // Aaron insisted I need an explanation for what this is supposed to do.
+    // someone insisted I need an explanation for what this is supposed to do.
     var explanation = svg.selectAll('.explain')
       .data([0])
       .enter().append("foreignObject")
